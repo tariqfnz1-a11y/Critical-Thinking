@@ -1,1 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Maths Critical Thinking Lab</title>
 
+    <!-- ===== STYLES ===== -->
+    <style>
+        /* ─── CSS Variables ─── */
+        :root {
+            --primary: #2f80ed;
+            --primary-dark: #1a5bb5;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #f59e0b;
+            --bg: #f0f4f9;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            --radius: 16px;
+            --transition: 0.3s ease;
+        }
+
+        /* ─── Reset ─── */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ─── Header ─── */
+        header {
+            background: linear-gradient(135deg, #17324d, #1e4a6f);
+            color: white;
+            padding: 28px 20px 32px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::after {
+            content: '🧠';
+            position: absolute;
+            right: 20px;
+            bottom: 10px;
+            font-size: 80px;
+            opacity: 0.08;
+            pointer-events: none;
+        }
+
+        header h1 {
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin: 0 0 6px;
+        }
+
+        header p {
+            font-size: clamp(1rem, 1.6vw, 1.2rem);
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 4px auto;
+        }
+
+        /* ─── Container ─── */
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 20px 16px 40px;
+            flex: 1;
+        }
+
+        /* ─── Top Bar ─── */
+        .topbar {
+            background: var(--card-bg);
+            padding: 16px 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            gap: 12px;
+        }
+
+        .topbar .counter {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .topbar .score {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
+        .topbar .score span {
+            font-size: 1.6rem;
+        }
+
+        .progress-wrap {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 10%;
+            background: linear-gradient(90deg, var(--primary), #6fa8f0);
+            transition: width 0.5s ease;
+            border-radius: 20px;
+        }
+
+        /* ─── Cards ─── */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 28px 30px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .card.hidden {
+            display: none;
+        }
+
+        .card .challenge-tag {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 4px 14px;
+            border-radius: 30px;
+            margin-bottom: 12px;
+        }
+
+        .card h2 {
+            font-size: 1.6rem;
+            margin: 0 0 8px;
+            color: var(--text);
+        }
+
+        .scenario {
+            background: #f8fafc;
+            border-left: 5px solid var(--primary);
+            padding: 18px 22px;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            margin: 16px 0 20px;
+            line-height: 1.7;
+        }
+
+        .question {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 18px 0 14px;
+        }
+
+        .options {
+            display: grid;
+            gap: 12px;
+            margin: 6px 0 12px;
+        }
+
+        .option {
+            background: white;
+            border: 2px solid #e2e8f0;
+            padding: 14px 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            text-align: left;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .option:hover:not(:disabled) {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(47, 128, 237, 0.15);
+        }
+
+        .option:disabled {
+            cursor: default;
+            opacity: 0.8;
+        }
+
+        .option.correct {
+            border-color: var(--success);
+            background: #ecfdf5;
+        }
+
+        .option.wrong {
+            border-color: var(--danger);
+            background: #fef2f2;
+        }
+
+        .option .letter {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            line-height: 24px;
+            text-align: center;
+            background: #e2e8f0;
+            border-radius: 50%;
+            margin-right: 10px;
+            font-weight: 700;
+            color: var(--text-light);
+        }
+
+        .option.correct .letter {
+            background: var(--success);
+            color: white;
+        }
+        .option.wrong .letter {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* ─── Feedback ─── */
+        .feedback {
+            margin-top: 18px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            display: none;
+            line-height: 1.6;
+            font-size: 1rem;
+            border-left: 4px solid transparent;
+        }
+
+        .feedback.good {
+            display: block;
+            background: #ecfdf5;
+            border-left-color: var(--success);
+        }
+
+        .feedback.tryagain {
+            display: block;
+            background: #fffbeb;
+            border-left-color: var(--warning);
+        }
+
+        .feedback .icon {
+            font-size: 1.4rem;
+            margin-right: 8px;
+        }
+
+        /* ─── Reflection Textarea ─── */
+        textarea {
+            width: 100%;
+            min-height: 130px;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            transition: border 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.15);
+        }
+
+        /* ─── Buttons ─── */
+        .btn {
+            border: none;
+            padding: 12px 28px;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(47, 128, 237, 0.3);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: var(--text);
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #15803d;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        /* ─── Results ─── */
+        .results {
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .results .score-big {
+            font-size: 4rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+
+        .results .level {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 6px 0 12px;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin: 28px 0 20px;
+            text-align: left;
+        }
+
+        .skill-card {
+            background: #f8fafc;
+            padding: 18px 16px;
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+            transition: 0.2s;
+        }
+
+        .skill-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        .skill-card .emoji {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .skill-card h4 {
+            font-size: 1rem;
+            margin: 0 0 4px;
+        }
+
+        .skill-card p {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin: 0;
+        }
+
+        /* ─── Hint Button ─── */
+        .hint-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            padding: 4px 0;
+            font-size: 0.9rem;
+            text-decoration: underline dotted;
+            transition: 0.2s;
+        }
+
+        .hint-btn:hover {
+            color: var(--primary-dark);
+        }
+
+        .hint-text {
+            background: #f1f5f9;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin: 8px 0 0;
+            font-size: 0.95rem;
+            display: none;
+            border-left: 3px solid var(--warning);
+        }
+
+        .hint-text.show {
+            display: block;
+        }
+
+        /* ─── Footer ─── */
+        footer {
+            text-align: center;
+            padding: 24px 16px;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            border-top: 1px solid #e2e8f0;
+            margin-top: auto;
+        }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 640px) {
+            .card {
+                padding: 20px 16px;
+            }
+            .topbar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            .topbar .counter,
+            .topbar .score {
+                text-align: center;
+            }
+            .results .score-big {
+                font-size: 3rem;
+            }
+            .profile-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .btn-group {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🧠 Maths Critical Thinking Lab</h1>
+        <p>Don't just calculate. Question. Test. Explain. Discover.</p>
+        <p style="font-size:0.9rem; opacity:0.8;">Designed for students aged 11–15</p>
+    </header>
+
+    <div class="container">
+
+        <!-- Top Bar -->
+        <div class="topbar">
+            <div class="counter">🧩 Challenge <span id="currentNum">1</span> of <span id="totalNum">10</span></div>
+            <div class="score">⭐ Score: <span id="scoreDisplay">0</span></div>
+            <div class="progress-wrap">
+                <div class="progress-bar" id="progressBar" style="width:10%;"></div>
+            </div>
+        </div>
+
+        <!-- ========== CHALLENGES ========== -->
+
+        <!-- Challenge 1 -->
+        <div class="card challenge" id="c1">
+            <div class="challenge-tag">🔍 Questioning</div>
+            <h2>Challenge 1 — Can You Trust the Claim?</h2>
+            <div class="scenario">
+                A student says: <br><br>
+                <strong>"Every time I sleep less than 6 hours, I get a lower maths mark. Therefore, sleeping less than 6 hours always causes low maths marks."</strong>
+            </div>
+            <div class="question">What is the best critical‑thinking response?</div>
+            <div class="options">
+                <button class="option" data-correct="false" onclick="handleAnswer(1, this)">
+                    <span class="letter">A</span> The student must be correct because it happened several times.
+                </button>
+                <button class="option" data-correct="true" onclick="handleAnswer(1, this)">
+                    <span class="letter">B</span> We need more evidence and should consider other possible causes.
+                </button>
+                <button class="option" data-correct="false" onclick="handleAnswer(1, this)">
+                    <span class="letter">C</span> Maths marks have nothing to do with sleep.
+                </button>
+            </div>
+            <button class="hint-btn" onclick="toggleHint(1)">💡 Hint</button>
+            <div class="hint-text" id="hint1">Think: does one thing happening after another prove it caused it? What else could affect maths marks?</div>
+            <div class="feedback" id="fb1"></div>
+        </div>
+
+        <!-- Challenge 2 -->
+        <div class="card challenge hidden" id="c2">
+            <div class="challenge-tag">❌ Finding Errors</div>
+            <h2>Challenge 2 — Find the Mistake</h2>
+            <div class="scenario">
+                <div style="background:#f8fafc; padding:16px; border-radius:10px; text-align:center; font-size:1.2rem;">
+                    3 × 4 = 12<br>
+                    3 × 5 = 15<br>
+                    3 × 6 = 18<br>
+                    <strong>∴ 3 × 100 = 300</strong>
+                </div>
+                <br>
+                A student says the pattern proves the answer.
+            </div>
+            <div class="question">Is the student's reasoning correct?</div>
+            <div class="options">
+                <button class="option" data-correct="true" onclick="handleAnswer(2, this)">
+                    <span class="letter">A</span> Yes. The multiplication relationship continues.
+                </button>
+                <button class="option" data-correct="false" onclick="handleAnswer(2, this)">
+                    <span class="letter">B</span> No. The student has not shown enough examples.
+                </button>
+                <button class="option" data-correct="false" onclick="handleAnswer(2, this)">
+                    <span class="letter">C</span> No. Multiplication stops at 18.
+                </button>
+            </div>
+            <button class="hint-btn" onclick="toggleHint(2)">💡 Hint</button>
+            <div class="hint-text" id="hint2">Multiplication by 3 follows a clear rule—does it work for every number?</div>
+            <div class="feedback" id="fb2"></div>
+        </div>
+
+        <!-- Challenge 3 -->
+        <div class="card challenge hidden" id="c3">
+            <div class="challenge-tag">🔢 Testing Patterns</div>
+            <h2>Challenge 3 — Does the Pattern Always Work?</h2>
+            <div class="scenario">
+                A student notices:
+                <div style="background:#f8fafc; padding:12px; border-radius:10px; text-align:center; margin:10px 0;">
+                    1 + 3 = 4 &nbsp;&nbsp;|&nbsp;&nbsp; 2 + 4 = 6 &nbsp;&nbsp;|&nbsp;&nbsp; 3 + 5 = 8
+                </div>
+                They conclude: <strong>"Adding two odd numbers always gives an even number."</strong>
+            </div>
+            <div class="question">What should a critical thinker do next?</div>
+            <div class="options">
+                <button class="option" data-correct="true" onclick="handleAnswer(3, this)">
+                    <span class="letter">A</span> Test the claim with more examples and look for a counterexample.
+                </button>
+                <button class="option" data-correct="false" onclick="handleAnswer(3, this)">
+                    <span class="letter">B</span> Accept it immediately.
+                </button>
+                <button class="option" data-correct="false" onclick="handleAnswer(3, this)">
+                    <span class="letter">C</span> Reject it because the numbers are too small.
+                </button>
+            </div>
+            <button class="hint-btn" onclick="toggleHint(3)">💡 Hint</button>
+            <div class="hint-text" id="hint3">Try 5 + 7, or 11 + 13. What do you notice? Is there any case where it fails?</div>
+            <div class="feedback" id="fb3"></div>
+        </div>
+
+        <!-- Challenge 4 -->
+        <div class="card challenge hidden" id="c4">
+            <div class="challenge-tag">📊 Evidence</div>
+            <h2>Challenge 4 — Which Evidence Is Stronger?</h2>
+            <div class="scenario">
+                A school wants to know whether students learn mathematics better when they practise for 20 minutes every day.
+            </div>
+            <div class="question">Which evidence would be most useful?</div>
+            <div class="options">
+                <button class="option" data-correct="false" onclick="handleAnswer(4, this)">
+                    <span class="letter">A</span> One teacher believes daily practice works.
+                </button>
+                <button class="option" data-correct="true" onclick="handleAnswer(4, this)">
+                    <span class="letter">B</span> Compare the results of many students who practise daily with similar students who do not.
+                </button>
+                <button class="option" data-correct="false" onclick="handleAnswer(4, this)">
+                    <span class="letter">C</span> A student says daily practice feels useful.
+                </button>
+            </div>
+            <button class="hint-btn" onclick="toggleHint(4)">💡 Hint</button>
+            <div class="hint-text" id="hint4">Which option involves data and a fair comparison?</div>
+            <div class="feedback" id="fb4"></div>
+        </div>
+
+        <!-- Challenge 5 -->
+        <div class="card challenge hidden" id="c5">
+            <div class="challenge-tag">🧩 Assumptions</div>
+            <h2>Challenge 5 — What's Missing?</h2>
+            <div class="scenario">
+                Ahmed says: <br><br>
+                <strong>"I scored higher after changing schools, so the new school must have caused my improvement."</strong>
+            </div>
+            <div class="question">What should Ahmed consider?</div>
+            <div class="options">
+                <button class="option" data-correct="true" onclick="handleAnswer(5, this)">
+                    <span class="letter">A</span> Other factors, such as increased study time, may have contributed.
+                </button>
+                <button class="option" data-correct="false" onclick="handleAnswer(5, this)">
+                    <span class="letter">B</span> The school building must be responsible.
+                </button>
+                <button class="option" data-correct="false" onclick="handleAnswer(5, this)">
+                    <span class="letter">C</span> Higher marks always mean better teaching.
+                </button>
+            </div>
+            <button class="hint-btn" onclick="toggleHint(5)">💡 Hint</button>
+            <div class="hint-text" id="hint5">Two events happening together doesn't always mean one caused the other. What else changed?</div>
+            <div class="feedback" id="fb5"></div>
+        </div>
+
+        <!-- Challenge 6 -->
+        <div class="card challenge hidden" id="c6">
+            <div class="challenge-tag">⚖️ Multiple Solutions</div>
+            <h2>Challenge 6 — Which Solution Is Better?</h2>
+            <div class="scenario">
+                A rectangle has an area of 36 cm².
+                <div style="display:flex; justify-content:center; gap:30px; flex-wrap:wrap; margin:15px 0;">
+                    <div style="border:2px solid #334e68; padding:20px; border-radius:10px; text-align:center;">
+                        6 cm × 6 cm<br>Area = 36 cm²
+                    </div>
+                    <div style="border:2px solid #334e68; padding:20px; border-radius:10px; text-align:center;">
+                        4 cm × 9 cm<br>Area = 36 cm²
+                    </div>
+                </div>
+            </div>
+            <div class="question">What can we conclude?</div>
+            <div class="options">
+                <button class="option" data-correct="true" onclick="handleAnswer(6, this)">
+                    <span class="letter">A</span> Different rectangles can have the same area.
+                </button>
+                <button class="option" data-correct="false" onclick="handleAnswer(6, this)">
+                    <span class="letter">B</span> Only a square can have an area of 36 cm².
+                </button>
+                <button class="option" data-correct="false" onclick="handleAnswer(6, this)">
+                    <span class="letter">C</span> The perimeter must always be the same.
+                </button>
+            </div>
+            <button class="hint-btn" onclick="toggleHint(6)">💡 Hint</button>
+            <div class="hint-text" id="hint6">Compare the two rectangles—do they have the same shape but the same area?</div>
+            <div class="feedback" id="fb6"></div>
+        </div>
+
+        <!-- Challenge 7 -->
+        <div class="card challenge hidden" id="c7">
+            <div class="challenge-tag">📈 Misleading Information</div>
+            <h2>Challenge 7 — Is the Graph Misleading?</h2>
+            <div class="scenario">
+                A graph shows: <br>
+                Class A: 80% &nbsp;&nbsp; Class B: 85% <br><br>
+                But the graph's vertical axis begins at 75% rather than 0%.
+            </div>
+            <div class="question">Why might this be misleading?</div>
+            <div class="options">
+                <button class="option" data-correct="true" onclick="handleAnswer(7, this)">
+                    <span class="letter">A</span> The visual difference may appear much larger than the actual 5% difference.
+                </button>
+                <button class="option" data-correct="false" onclick="handleAnswer(7, this)">
+                    <span class="letter">B</span> Graphs must always start at 75%.
+                </button>
+                <button class="option" data-correct="false" onclick="handleAnswer(7, this)">
+                    <span class="letter">C</span> Percentages cannot be shown on graphs.
+                </button>
+            </div>
+            <button class="hint-btn" onclick="toggleHint(7)">💡 Hint</button>
+            <div class="hint-text" id="hint7">Think about how the visual height difference compares to the actual percentage gap.</div>
+            <div class="feedback" id="fb7"></div>
+        </div>
+
+        <!-- Challenge 8 -->
+        <div class="card challenge hidden" id="c8">
+            <div class="challenge-tag">💡 Counterexamples</div>
+            <h2>Challenge 8 — Can You Disprove It?</h2>
+            <div class="scenario">
+                A student claims: <br><br>
+                <strong>"All rectangles have four equal sides."</strong>
+            </div>
+            <div class="question">What is the best way to challenge the claim?</div>
+            <div class="options">
+                <button class="option" data-correct="true" onclick="handleAnswer(8, this)">
+                    <span class="letter">A</span> Find one rectangle whose opposite sides are equal but whose four sides are not all equal.
+                </button>
+                <button class="option" data-correct="false" onclick="handleAnswer(8, this)">
+                    <span class="letter">B</span> Say that the student is wrong.
+                </button>
+                <button class="option" data-correct="false" onclick="handleAnswer(8, this)">
+                    <span class="letter">C</span> Draw a square only.
+                </button>
+            </div>
+            <button class="hint-btn" onclick="toggleHint(8)">💡 Hint</button>
+            <div class="hint-text" id="hint8">A single counterexample can disprove a statement that claims "all". What shape is a rectangle but not a square?</div>
+            <div class="feedback" id="fb8"></div>
+        </div>
+
+        <!-- Challenge 9 -->
+        <div class="card challenge hidden" id="c9">
+            <div class="challenge-tag">🔄 Changing Your Mind</div>
+            <h2>Challenge 9 — What Would Change Your Mind?</h2>
+            <div class="scenario">
+                You believe: <br><br>
+                <strong>"Students should have maths homework every day because more practice always produces better results."</strong>
+            </div>
+            <div class="question">Which evidence would be most likely to make you reconsider?</div>
+            <div class="options">
+                <button class="option" data-correct="false" onclick="handleAnswer(9, this)">
+                    <span class="letter">A</span> Your friend agrees with you.
+                </button>
+                <button class="option" data-correct="true" onclick="handleAnswer(9, this)">
+                    <span class="letter">B</span> A large, reliable study finds that daily homework produces little additional improvement for students your age.
+                </button>
+                <button class="option" data-correct="false" onclick="handleAnswer(9, this)">
+                    <span class="letter">C</span> You personally enjoy homework.
+                </button>
+            </div>
+            <button class="hint-btn" onclick="toggleHint(9)">💡 Hint</button>
+            <div class="hint-text" id="hint9">What kind of evidence would be strong enough to challenge a deeply held belief?</div>
+            <div class="feedback" id="fb9"></div>
+        </div>
+
+        <!-- Challenge 10 -->
+        <div class="card challenge hidden" id="c10">
+            <div class="challenge-tag">🧠 Reflection</div>
+            <h2>Challenge 10 — Become the Investigator</h2>
+            <div class="scenario">
+                <strong>Claim:</strong> "Students who use calculators are worse at mathematics." <br><br>
+                You must decide whether the claim is reasonable.
+            </div>
+            <div class="question">What evidence would you want before accepting or rejecting the claim?</div>
+            <textarea id="reflection" placeholder="Think about evidence, comparisons, sample size, other explanations, experiments, or data…"></textarea>
+            <div class="btn-group">
+                <button class="btn btn-success" onclick="finish()">📝 Complete Investigation</button>
+            </div>
+            <div class="feedback" id="fb10"></div>
+        </div>
+
+        <!-- ========== RESULTS ========== -->
+        <div class="card hidden" id="resultsCard">
+            <div class="results">
+                <h2>🏆 Your Critical Thinking Profile</h2>
+                <div class="score-big" id="finalScore">0 / 100</div>
+                <div class="level" id="levelTag">🌟 Exceptional Critical Thinker</div>
+                <p style="max-width:600px; margin:10px auto;">
+                    Critical thinking is not about always having the correct answer.
+                    It is about asking good questions, examining evidence,
+                    testing ideas and being willing to change your mind.
+                </p>
+
+                <div class="profile-grid">
+                    <div class="skill-card">
+                        <span class="emoji">🔍</span>
+                        <h4>Questioning</h4>
+                        <p>Question claims instead of accepting them immediately.</p>
+                    </div>
+                    <div class="skill-card">
+                        <span class="emoji">📊</span>
+                        <h4>Evidence</h4>
+                        <p>Look for reliable and relevant evidence.</p>
+                    </div>
+                    <div class="skill-card">
+                        <span class="emoji">🧩</span>
+                        <h4>Assumptions</h4>
+                        <p>Consider what might be missing from an argument.</p>
+                    </div>
+                    <div class="skill-card">
+                        <span class="emoji">🔄</span>
+                        <h4>Flexibility</h4>
+                        <p>Be willing to revise your thinking.</p>
+                    </div>
+                    <div class="skill-card">
+                        <span class="emoji">💡</span>
+                        <h4>Problem Solving</h4>
+                        <p>Explore different possible solutions.</p>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="location.reload()">🔄 Try Again</button>
+            </div>
+        </div>
+
+    </div>
+
+    <footer>
+        Maths Critical Thinking Lab • Ages 11–15 • Built for curiosity
+    </footer>
+
+    <!-- ===== JAVASCRIPT ===== -->
+    <script>
+        // ─── State ───
+        let score = 0;
+        let currentChallenge = 1;
+        const totalChallenges = 10;
+        let answered = false; // prevent double-click
+
+        // ─── Feedback messages ───
+        const feedbackData = {
+            1: {
+                good: "Excellent! You recognized that a relationship does not automatically prove causation. Critical thinkers look for other possible explanations.",
+                bad: "Think again. A pattern may be real, but we should consider other factors before deciding that one thing caused another."
+            },
+            2: {
+                good: "Correct. Multiplication follows a consistent mathematical relationship. You recognized that the pattern can be generalized.",
+                bad: "Look carefully at the operation. Multiplication by 3 follows a consistent rule."
+            },
+            3: {
+                good: "Excellent. Testing a pattern with more examples—and looking for a counterexample—is an important mathematical thinking strategy.",
+                bad: "A few examples are not always enough. A critical thinker tests whether the rule continues."
+            },
+            4: {
+                good: "Excellent. Comparing groups and using data provides stronger evidence than one person's opinion.",
+                bad: "Think about the quality of evidence. One person's opinion is weaker than evidence collected from many students."
+            },
+            5: {
+                good: "Exactly. The timing of two events does not prove that one caused the other. Other explanations must be considered.",
+                bad: "Ask yourself: what else could have caused Ahmed's improvement?"
+            },
+            6: {
+                good: "Correct! Different rectangles can have the same area. Mathematics often has multiple valid possibilities.",
+                bad: "Compare the dimensions carefully. Both rectangles have an area of 36 cm²."
+            },
+            7: {
+                good: "Excellent! Changing the scale can exaggerate a small difference. Critical thinkers examine how information is presented.",
+                bad: "Look carefully at the vertical scale. How large does the difference appear compared with the actual 5% difference?"
+            },
+            8: {
+                good: "Excellent! One counterexample can disprove a statement that claims something is true for every case.",
+                bad: "Think about the word 'all'. If a statement says ALL, one valid counterexample can challenge it."
+            },
+            9: {
+                good: "Excellent! A critical thinker is willing to reconsider a belief when strong evidence challenges it.",
+                bad: "Think about what kind of evidence would genuinely challenge your belief."
+            }
+        };
+
+        // ─── Handle Answer ───
+        function handleAnswer(qNum, button) {
+            if (answered) return;
+            answered = true;
+
+            const correct = button.dataset.correct === 'true';
+            const options = document.querySelectorAll(`#c${qNum} .option`);
+            options.forEach(btn => btn.disabled = true);
+
+            if (correct) {
+                button.classList.add('correct');
+                score += 10;
+            } else {
+                button.classList.add('wrong');
+                // highlight the correct one
+                options.forEach(btn => {
+                    if (btn.dataset.correct === 'true') btn.classList.add('correct');
+                });
+            }
+
+            // Update score display
+            document.getElementById('scoreDisplay').textContent = score;
+
+            // Show feedback
+            const fb = document.getElementById(`fb${qNum}`);
+            fb.style.display = 'block';
+            const isGood = correct;
+            fb.className = `feedback ${isGood ? 'good' : 'tryagain'}`;
+            const msg = isGood ? feedbackData[qNum].good : feedbackData[qNum].bad;
+            fb.innerHTML = `<span class="icon">${isGood ? '✅' : '💭'}</span> ${msg}`;
+
+            // Auto advance after delay
+            setTimeout(() => {
+                advance(qNum);
+            }, 2800);
+        }
+
+        // ─── Advance to next challenge ───
+        function advance(qNum) {
+            document.getElementById(`c${qNum}`).classList.add('hidden');
+
+            if (qNum < totalChallenges) {
+                const next = qNum + 1;
+                document.getElementById(`c${next}`).classList.remove('hidden');
+                document.getElementById('currentNum').textContent = next;
+                document.getElementById('progressBar').style.width = `${(next / totalChallenges) * 100}%`;
+                answered = false;
+                // reset feedback for next (optional)
+            } else {
+                // Last challenge done, but we need to handle the final one separately
+                // Actually, challenge 10 is a textarea, not auto-advancing.
+                // So if we reach here, it's because we advanced from 9 to 10, which is fine.
+                // For challenge 10, we don't auto-advance; we wait for "finish" button.
+                // So no action needed.
+            }
+        }
+
+        // ─── Toggle Hint ───
+        function toggleHint(qNum) {
+            const hint = document.getElementById(`hint${qNum}`);
+            hint.classList.toggle('show');
+        }
+
+        // ─── Finish (Challenge 10) ───
+        function finish() {
+            const text = document.getElementById('reflection').value.trim();
+            if (text.length < 30) {
+                alert('Please write at least a few sentences explaining what evidence you would want.');
+                return;
+            }
+
+            // Simple keyword check
+            const keywords = ['evidence', 'data', 'study', 'research', 'compare', 'experiment', 'sample', 'test', 'results',
+                'students', 'calculator', 'marks', 'skills'
+            ];
+            let found = 0;
+            keywords.forEach(word => {
+                if (text.toLowerCase().includes(word)) found++;
+            });
+
+            if (found >= 3) {
+                score += 10;
+            } else {
+                score += 5;
+            }
+
+            // Hide challenge 10, show results
+            document.getElementById('c10').classList.add('hidden');
+            document.getElementById('resultsCard').classList.remove('hidden');
+
+            // Update progress to 100%
+            document.getElementById('progressBar').style.width = '100%';
+            document.getElementById('currentNum').textContent = 'Done';
+
+            // Final score
+            document.getElementById('finalScore').textContent = `${score} / 100`;
+            document.getElementById('scoreDisplay').textContent = score;
+
+            // Level
+            let level = '';
+            if (score >= 90) level = '🌟 Exceptional Critical Thinker';
+            else if (score >= 70) level = '🚀 Strong Critical Thinker';
+            else if (score >= 50) level = '👍 Developing Critical Thinker';
+            else level = '🌱 Critical Thinking Explorer';
+            document.getElementById('levelTag').textContent = level;
+
+            // Scroll to results
+            document.getElementById('resultsCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // ─── Reset (reload) ───
+        // Not needed as we use location.reload() on the button.
+
+        // ─── Initialise ───
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ensure first challenge is visible, others hidden
+            document.querySelectorAll('.challenge').forEach((el, idx) => {
+                if (idx === 0) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+            document.getElementById('progressBar').style.width = '10%';
+            document.getElementById('currentNum').textContent = '1';
+            document.getElementById('totalNum').textContent = totalChallenges;
+            document.getElementById('scoreDisplay').textContent = '0';
+        });
+    </script>
+
+</body>
+</html>
