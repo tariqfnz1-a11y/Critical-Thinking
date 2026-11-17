@@ -38,7 +38,7 @@ footer{text-align:center;color:var(--muted);padding:18px;font-size:.9rem}
 <p class="small">Ages 11–15 · Classes 6–10 · Interactive learning resource</p>
 </header>
 <main class="container">
-<section class="intro">
+<section class="intro" id="intro">
 <h2>Welcome, Mathematical Investigator!</h2>
 <p>Work through ten challenges. Choose an answer, read the explanation, and practise explaining your own reasoning. Your report reflects both your answers and the skills demonstrated in your written investigation.</p>
 <div class="controls">
@@ -98,27 +98,141 @@ const challenges=[
 ];
 let state={index:0,score:0,level:"developing",name:"",answers:[],skillEarned:{questioning:0,reasoning:0,evidence:0,assumptions:0,problem:0,flexibility:0},started:false};
 const $=id=>document.getElementById(id);
-function start(){state={index:0,score:0,level:$("levelSelect").value,name:$("studentName").value.trim(),answers:[],skillEarned:{questioning:0,reasoning:0,evidence:0,assumptions:0,problem:0,flexibility:0},started:true};$("intro").classList.add("hidden");$("workArea").classList.remove("hidden");render();}
-function render(){const c=challenges[state.index];$("counter").textContent=`${state.index+1} / 10`;$("score").textContent=`${state.score} / 100`;let pct=Math.round(state.index/10*100);$("progressText").textContent=pct+"%";$("progressBar").style.width=pct+"%";
-const scenario=typeof c.scenario==="function"?c.scenario(state.level):c.scenario;
-let html=`<article class="challenge"><span class="tag">${c.tag}</span><h2>Challenge ${c.id} — ${c.title}</h2><div class="scenario">${scenario}</div><div class="question">${c.q}</div>`;
-if(c.sim){html+=`<div class="simulator"><strong>Explore the graph scale</strong><p class="small muted">Change the axis starting point. Notice how the visible bars change even though the data stays the same.</p><label for="axisStart">Vertical axis starts at: <strong id="axisVal">0%</strong></label><input class="range" id="axisStart" type="range" min="0" max="80" step="5" value="0"><div class="graph-wrap"><div class="barbox">Class A · 80%<div class="bar" id="barA" style="height:80px"></div></div><div class="barbox">Class B · 85%<div class="bar alt" id="barB" style="height:85px"></div></div></div><p class="small muted" id="graphNote">With a zero baseline, the difference appears in proportion to the full scale.</p></div>`}
-if(c.written){html+=`<div class="investigation"><label for="investigationText"><strong>Your investigation plan</strong></label><textarea id="investigationText" placeholder="I would compare... I would measure... I would make the comparison fair by..."></textarea><p class="small muted">Your response is assessed using a transparent checklist. The automated check gives formative guidance; it cannot fully judge the quality of your reasoning.</p></div><div class="actions"><button class="btn" id="submitWriting">Submit investigation</button></div><div id="writingFeedback" class="feedback" aria-live="polite"></div>`}
-else{html+=`<div class="options" role="group" aria-label="Answer choices">${c.options.map((o,i)=>`<button class="option" data-choice="${i}"><span class="letter">${String.fromCharCode(65+i)}</span><span>${o}</span></button>`).join("")}</div><div class="feedback" id="answerFeedback" aria-live="polite"></div><div class="reasoning"><label for="reasonText">Explain your thinking (optional)</label><textarea id="reasonText" placeholder="I chose this because..."></textarea></div><details class="hint"><summary>💡 Show a hint</summary><p>${c.hint}</p></details><div class="actions"><button class="btn" id="continueBtn" disabled>Continue</button></div>`}
-html+="</article>";$("challengeHost").innerHTML=html;
-if(c.sim){$("axisStart").addEventListener("input",updateGraph);updateGraph();}
-if(c.written){$("submitWriting").addEventListener("click",submitWriting);}
-else{document.querySelectorAll("[data-choice]").forEach(b=>b.addEventListener("click",()=>choose(Number(b.dataset.choice))));$("continueBtn").addEventListener("click",next);}
+function start(){
+  state={index:0,score:0,level:$("levelSelect").value,name:$("studentName").value.trim(),answers:[],skillEarned:{questioning:0,reasoning:0,evidence:0,assumptions:0,problem:0,flexibility:0},started:true};
+  $("intro").classList.add("hidden");
+  $("workArea").classList.remove("hidden");
+  render();
 }
-function updateGraph(){let start=Number($("axisStart").value);$("axisVal").textContent=start+"%";let range=100-start;let hA=Math.max(4,(80-start)/range*130),hB=Math.max(4,(85-start)/range*130);$("barA").style.height=hA+"px";$("barB").style.height=hB+"px";$("graphNote").textContent=start===0?"With a zero baseline, the difference appears in proportion to the full 0–100% scale.":`Starting at ${start}% magnifies the visible difference. The actual gap remains 5 percentage points.`;}
-function choose(choice){const c=challenges[state.index],correct=choice===c.correct;document.querySelectorAll("[data-choice]").forEach((b,i)=>{b.disabled=true;if(i===c.correct)b.classList.add("correct");if(i===choice&&!correct)b.classList.add("wrong");});let points=correct?10:2;let explanation=correct?c.explain:c.wrong+" "+c.explain;state.score+=points;state.skillEarned[c.skill]+=points;state.answers.push({id:c.id,correct,points,reason:$("reasonText").value.trim()});$("score").textContent=`${state.score} / 100`;const fb=$("answerFeedback");fb.className="feedback show "+(correct?"good":"retry");fb.innerHTML=`<strong>${correct?"✓ Correct — 10 points":"Not quite — 2 participation points"}</strong>${explanation}<br><span class="small"><b>Level focus:</b> ${c.level[state.level]}</span>`;$("continueBtn").disabled=false;}
-function submitWriting(){let text=$("investigationText").value.trim();if(text.length<35){$("writingFeedback").className="feedback show retry";$("writingFeedback").textContent="Please add a little more detail (at least 35 characters) before submitting.";return;}
-let t=text.toLowerCase();let checks=[{label:"A comparison or suitable groups",hit:/compar|group|students|sample/.test(t)},{label:"A measurable outcome",hit:/measure|test|marks|score|skill|accuracy|problem/.test(t)},{label:"Fairness or another variable",hit:/fair|same|control|age|prior|ability|rule|bias/.test(t)},{label:"Evidence or limitations",hit:/evidence|data|result|limitation|reliable|large|record/.test(t)}];let earned=checks.filter(x=>x.hit).length;let points=earned*2+2;state.score+=points;state.skillEarned.assumptions+=points;state.skillEarned.evidence+=earned>=2?2:0;state.answers.push({id:10,correct:earned>=3,points,reason:text});let fb=$("writingFeedback");fb.className="feedback show "+(earned>=3?"good":"retry");fb.innerHTML=`<strong>Investigation checklist: ${earned}/4 indicators found · ${points}/10 points</strong><ul>${checks.map(x=>`<li>${x.hit?"✓":"○"} ${x.label}</li>`).join("")}</ul><p>${earned>=3?"Good structure. Strengthen your plan by explaining how you would avoid bias and interpret the results.":"Your plan is a starting point. Add details about comparison groups, what you will measure, fairness and the evidence you would collect."}</p><p class="small">This is a keyword-supported checklist, not an automated judgement of the full quality of your writing.</p>`;$("submitWriting").disabled=true;$("submitWriting").textContent="Submitted";$("score").textContent=`${state.score} / 100`;$("counter").textContent="10 / 10";$("progressText").textContent="100%";$("progressBar").style.width="100%";let btn=document.createElement("button");btn.className="btn";btn.textContent="View my report";btn.onclick=showResults;$("challengeHost").querySelector(".actions").appendChild(btn);}
-function next(){if(state.index===8){state.index=9;render();return;}state.index++;if(state.index>=9)return;render();}
-function showResults(){ $("workArea").classList.add("hidden");$("results").classList.remove("hidden");let score=state.score;let level=score>=85?"🌟 Exceptional investigator":score>=70?"🚀 Strong critical thinker":score>=50?"👍 Developing critical thinker":"🌱 Curious learner";$("finalScore").textContent=`${score} / 100`;$("levelTag").textContent=level;$("studentResult").textContent=(state.name?`Student: ${state.name} · `:"")+"Level: "+({foundation:"Foundation",developing:"Developing",advanced:"Advanced"}[state.level]);$("summaryText").textContent=score>=70?"You demonstrated a strong foundation in evaluating claims and reasoning. Keep practising clear explanations and evidence-based conclusions.":"You have started building valuable habits. Review the explanations and try the challenges again to strengthen your reasoning.";
-let grid=$("skillGrid");grid.innerHTML="";Object.entries(skills).forEach(([key,s])=>{let raw=state.skillEarned[key],pct=Math.min(100,Math.round(raw/20*100));let div=document.createElement("div");div.className="skill";div.innerHTML=`<strong><span>${s.icon} ${s.label}</span><span>${raw} pts</span></strong><div class="progress"><span style="width:${pct}%"></span></div><p class="small muted">${s.desc}</p>`;grid.appendChild(div);});
-let weakest=Object.entries(state.skillEarned).sort((a,b)=>a[1]-b[1]).slice(0,3);$("nextSteps").innerHTML=weakest.map(([k])=>`<li>Practise <b>${skills[k].label.toLowerCase()}</b>: ${skills[k].desc}</li>`).join("")+"<li>For every answer, practise writing one sentence explaining why it is valid.</li>";$("results").scrollIntoView({behavior:"smooth"});}
-$("startBtn").addEventListener("click",start);$("restartBtn").addEventListener("click",()=>location.reload());$("printBtn").addEventListener("click",()=>window.print());
+function render(){
+  const c=challenges[state.index];
+  $("counter").textContent=`${state.index+1} / ${challenges.length}`;
+  $("score").textContent=`${state.score} / 100`;
+  let pct=Math.round(state.index/challenges.length*100);
+  $("progressText").textContent=pct+"%";
+  $("progressBar").style.width=pct+"%";
+  const scenario=typeof c.scenario==="function"?c.scenario(state.level):c.scenario;
+  let html=`<article class="challenge"><span class="tag">${c.tag}</span><h2>Challenge ${c.id} — ${c.title}</h2><div class="scenario">${scenario}</div><div class="question">${c.q}</div>`;
+  if(c.sim){
+    html+=`<div class="simulator"><strong>Explore the graph scale</strong><p class="small muted">Change the axis starting point. Notice how the visible bars change even though the data stays the same.</p><label for="axisStart">Vertical axis starts at: <strong id="axisVal">0%</strong></label><input class="range" id="axisStart" type="range" min="0" max="80" step="5" value="0"><div class="graph-wrap"><div class="barbox">Class A · 80%<div class="bar" id="barA" style="height:80px"></div></div><div class="barbox">Class B · 85%<div class="bar alt" id="barB" style="height:85px"></div></div></div><p class="small muted" id="graphNote">With a zero baseline, the difference appears in proportion to the full scale.</p></div>`;
+  }
+  if(c.written){
+    html+=`<div class="investigation"><label for="investigationText"><strong>Your investigation plan</strong></label><textarea id="investigationText" placeholder="I would compare... I would measure... I would make the comparison fair by..."></textarea><p class="small muted">Your response is assessed using a transparent checklist. The automated check gives formative guidance; it cannot fully judge the quality of your reasoning.</p></div><div class="actions"><button class="btn" id="submitWriting">Submit investigation</button></div><div id="writingFeedback" class="feedback" aria-live="polite"></div>`;
+  } else {
+    html+=`<div class="options" role="group" aria-label="Answer choices">${c.options.map((o,i)=>`<button class="option" data-choice="${i}"><span class="letter">${String.fromCharCode(65+i)}</span><span>${o}</span></button>`).join("")}</div><div class="feedback" id="answerFeedback" aria-live="polite"></div><div class="reasoning"><label for="reasonText">Explain your thinking (optional)</label><textarea id="reasonText" placeholder="I chose this because..."></textarea></div><details class="hint"><summary>💡 Show a hint</summary><p>${c.hint}</p></details><div class="actions"><button class="btn" id="continueBtn" disabled>Continue</button></div>`;
+  }
+  html+="</article>";
+  $("challengeHost").innerHTML=html;
+  if(c.sim){
+    $("axisStart").addEventListener("input",updateGraph);
+    updateGraph();
+  }
+  if(c.written){
+    $("submitWriting").addEventListener("click",submitWriting);
+  } else {
+    document.querySelectorAll("[data-choice]").forEach(b=>b.addEventListener("click",()=>choose(Number(b.dataset.choice))));
+    $("continueBtn").addEventListener("click",next);
+  }
+}
+function updateGraph(){
+  let start=Number($("axisStart").value);
+  $("axisVal").textContent=start+"%";
+  let range=100-start;
+  let hA=Math.max(4,(80-start)/range*130);
+  let hB=Math.max(4,(85-start)/range*130);
+  $("barA").style.height=hA+"px";
+  $("barB").style.height=hB+"px";
+  $("graphNote").textContent=start===0
+    ?"With a zero baseline, the difference appears in proportion to the full 0–100% scale."
+    :`Starting at ${start}% magnifies the visible difference. The actual gap remains 5 percentage points.`;
+}
+function choose(choice){
+  const c=challenges[state.index];
+  const correct=choice===c.correct;
+  document.querySelectorAll("[data-choice]").forEach((b,i)=>{
+    b.disabled=true;
+    if(i===c.correct)b.classList.add("correct");
+    if(i===choice&&!correct)b.classList.add("wrong");
+  });
+  let points=correct?10:2;
+  let explanation=correct?c.explain:c.wrong+" "+c.explain;
+  state.score+=points;
+  state.skillEarned[c.skill]+=points;
+  state.answers.push({id:c.id,correct,points,reason:$("reasonText").value.trim()});
+  $("score").textContent=`${state.score} / 100`;
+  const fb=$("answerFeedback");
+  fb.className="feedback show "+(correct?"good":"retry");
+  fb.innerHTML=`<strong>${correct?"✓ Correct — 10 points":"Not quite — 2 participation points"}</strong>${explanation}<br><span class="small"><b>Level focus:</b> ${c.level[state.level]}</span>`;
+  $("continueBtn").disabled=false;
+}
+function submitWriting(){
+  let text=$("investigationText").value.trim();
+  if(text.length<35){
+    $("writingFeedback").className="feedback show retry";
+    $("writingFeedback").textContent="Please add a little more detail (at least 35 characters) before submitting.";
+    return;
+  }
+  let t=text.toLowerCase();
+  let checks=[
+    {label:"A comparison or suitable groups",hit:/compar|group|students|sample/.test(t)},
+    {label:"A measurable outcome",hit:/measure|test|marks|score|skill|accuracy|problem/.test(t)},
+    {label:"Fairness or another variable",hit:/fair|same|control|age|prior|ability|rule|bias/.test(t)},
+    {label:"Evidence or limitations",hit:/evidence|data|result|limitation|reliable|large|record/.test(t)}
+  ];
+  let earned=checks.filter(x=>x.hit).length;
+  let points=earned*2+2;
+  state.score+=points;
+  state.skillEarned.assumptions+=points;
+  state.skillEarned.evidence+=earned>=2?2:0;
+  state.answers.push({id:10,correct:earned>=3,points,reason:text});
+  let fb=$("writingFeedback");
+  fb.className="feedback show "+(earned>=3?"good":"retry");
+  fb.innerHTML=`<strong>Investigation checklist: ${earned}/4 indicators found · ${points}/10 points</strong><ul>${checks.map(x=>`<li>${x.hit?"✓":"○"} ${x.label}</li>`).join("")}</ul><p>${earned>=3?"Good structure. Strengthen your plan by explaining how you would avoid bias and interpret the results.":"Your plan is a starting point. Add details about comparison groups, what you will measure, fairness and the evidence you would collect."}</p><p class="small">This is a keyword-supported checklist, not an automated judgement of the full quality of your writing.</p>`;
+  $("submitWriting").disabled=true;
+  $("submitWriting").textContent="Submitted";
+  $("score").textContent=`${state.score} / 100`;
+  $("counter").textContent=`${challenges.length} / ${challenges.length}`;
+  $("progressText").textContent="100%";
+  $("progressBar").style.width="100%";
+  let btn=document.createElement("button");
+  btn.className="btn";
+  btn.textContent="View my report";
+  btn.onclick=showResults;
+  $("challengeHost").querySelector(".actions").appendChild(btn);
+}
+function next(){
+  state.index++;
+  if(state.index>=challenges.length)return;
+  render();
+}
+function showResults(){
+  $("workArea").classList.add("hidden");
+  $("results").classList.remove("hidden");
+  let score=state.score;
+  let level=score>=85?"🌟 Exceptional investigator":score>=70?"🚀 Strong critical thinker":score>=50?"👍 Developing critical thinker":"🌱 Curious learner";
+  $("finalScore").textContent=`${score} / 100`;
+  $("levelTag").textContent=level;
+  $("studentResult").textContent=(state.name?`Student: ${state.name} · `:"")+"Level: "+({foundation:"Foundation",developing:"Developing",advanced:"Advanced"}[state.level]);
+  $("summaryText").textContent=score>=70
+    ?"You demonstrated a strong foundation in evaluating claims and reasoning. Keep practising clear explanations and evidence-based conclusions."
+    :"You have started building valuable habits. Review the explanations and try the challenges again to strengthen your reasoning.";
+  let grid=$("skillGrid");
+  grid.innerHTML="";
+  Object.entries(skills).forEach(([key,s])=>{
+    let raw=state.skillEarned[key];
+    let pct=Math.min(100,Math.round(raw/20*100));
+    let div=document.createElement("div");
+    div.className="skill";
+    div.innerHTML=`<strong><span>${s.icon} ${s.label}</span><span>${raw} pts</span></strong><div class="progress"><span style="width:${pct}%"></span></div><p class="small muted">${s.desc}</p>`;
+    grid.appendChild(div);
+  });
+  let weakest=Object.entries(state.skillEarned).sort((a,b)=>a[1]-b[1]).slice(0,3);
+  $("nextSteps").innerHTML=weakest.map(([k])=>`<li>Practise <b>${skills[k].label.toLowerCase()}</b>: ${skills[k].desc}</li>`).join("")+"<li>For every answer, practise writing one sentence explaining why it is valid.</li>";
+  $("results").scrollIntoView({behavior:"smooth"});
+}
+$("startBtn").addEventListener("click",start);
+$("restartBtn").addEventListener("click",()=>location.reload());
+$("printBtn").addEventListener("click",()=>window.print());
 </script>
 </body>
 </html>
